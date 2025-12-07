@@ -1,0 +1,7 @@
+{
+  "name": "AuditGuard AR",
+  "description": "AI-Powered Accounts Receivable Audit System. Features automated aging analysis, anomaly detection, and a real-time voice-enabled Senior Auditor assistant powered by Gemini 2.5.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
