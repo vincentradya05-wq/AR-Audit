@@ -1,46 +1,256 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AuditGuard AR - Intelligent Audit System</title>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuditGuard AR - Sistem Audit Piutang</title>
+    <!-- Menggunakan Tailwind CSS untuk tampilan profesional instan -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-      body {
-        font-family: 'Inter', sans-serif;
-        background-color: #f8fafc;
-      }
-      /* Custom scrollbar for data tables */
-      .custom-scrollbar::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-track {
-        background: #f1f5f9;
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 4px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-      }
+        .audit-bg { background-color: #f3f4f6; }
+        .sidebar { background-color: #1e293b; color: white; }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.1/",
-    "react": "https://aistudiocdn.com/react@^19.2.1",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.556.0",
-    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0"
-  }
-}
-</script>
 </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<body class="audit-bg flex h-screen overflow-hidden">
+
+    <!-- Sidebar (Kisi Kiri: Menu Audit) -->
+    <aside class="sidebar w-64 flex-shrink-0 flex flex-col transition-all duration-300">
+        <div class="p-4 text-xl font-bold border-b border-gray-700">
+            🛡️ AuditGuard AR
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="#" class="block py-2.5 px-4 rounded hover:bg-gray-700 transition" onclick="showSection('dashboard')">📊 Dashboard & Info</a>
+            <a href="#" class="block py-2.5 px-4 rounded hover:bg-gray-700 transition" onclick="showSection('upload')">📂 Upload Data (CSV)</a>
+            <a href="#" class="block py-2.5 px-4 rounded hover:bg-gray-700 transition" onclick="showSection('analysis')">🤖 Analisis AI & Voice</a>
+            <a href="#" class="block py-2.5 px-4 rounded hover:bg-gray-700 transition" onclick="showSection('report')">📑 Laporan Audit</a>
+        </nav>
+        <div class="p-4 border-t border-gray-700 text-sm opacity-50">
+            v1.0.0 - Senior Auditor Mode
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-8 relative">
+        
+        <!-- API Key Input (Supaya aman, user input sendiri) -->
+        <div class="absolute top-4 right-4 bg-white p-2 rounded shadow-md z-50">
+            <input type="password" id="apiKey" placeholder="Paste Gemini API Key Disini" class="border p-1 rounded text-sm">
+        </div>
+
+        <!-- Section: Dashboard (Landing) -->
+        <div id="dashboard" class="space-y-6">
+            <h2 class="text-3xl font-bold text-gray-800">Selamat Datang, Auditor.</h2>
+            <p class="text-gray-600">Sistem siap melakukan prosedur analitis piutang usaha sesuai standar SPAP.</p>
+            <button onclick="showSection('upload')" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition shadow-lg">
+                🚀 Start Audit Process
+            </button>
+            
+            <!-- Cards Ringkasan (Placeholder) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
+                    <h3 class="text-gray-500 text-sm">Total Exposure</h3>
+                    <p id="summary-total" class="text-2xl font-bold">Rp 0</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-red-500">
+                    <h3 class="text-gray-500 text-sm">Risk > 90 Hari</h3>
+                    <p id="summary-risk" class="text-2xl font-bold">Rp 0</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
+                    <h3 class="text-gray-500 text-sm">Status Data</h3>
+                    <p id="summary-status" class="text-xl font-bold">Menunggu Upload</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Upload -->
+        <div id="upload" class="hidden space-y-6">
+            <h2 class="text-2xl font-bold text-gray-800">1. Ingesti Data Klien</h2>
+            <div class="bg-white p-8 rounded-lg shadow-lg border-2 border-dashed border-gray-300 text-center">
+                <p class="mb-4 text-gray-600">Upload Kertas Kerja Piutang (Format .CSV)</p>
+                <input type="file" id="csvInput" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+            </div>
+            <div id="csvPreview" class="bg-white p-4 rounded shadow hidden overflow-x-auto text-sm"></div>
+        </div>
+
+        <!-- Section: Analisis AI -->
+        <div id="analysis" class="hidden space-y-6 flex flex-col h-[80vh]">
+            <h2 class="text-2xl font-bold text-gray-800">2. Prosedur Analitis (AI Auditor)</h2>
+            
+            <!-- Chat Area -->
+            <div id="chatHistory" class="flex-1 bg-white p-4 rounded-lg shadow overflow-y-auto space-y-4 border border-gray-200">
+                <div class="p-3 bg-blue-50 rounded-lg text-gray-800 max-w-3xl">
+                    Halo. Saya AuditGuard. Silakan upload data, lalu tanyakan tentang Aging Schedule, Konfirmasi Piutang, atau indikasi Fraud.
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="bg-white p-4 rounded-lg shadow flex gap-2">
+                <button id="micBtn" class="p-3 rounded-full bg-gray-200 hover:bg-gray-300">🎙️</button>
+                <input type="text" id="userPrompt" placeholder="Ketik perintah audit atau gunakan suara..." class="flex-1 border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="sendToGemini()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">Kirim</button>
+            </div>
+        </div>
+
+        <!-- Section: Report -->
+        <div id="report" class="hidden space-y-6">
+            <h2 class="text-2xl font-bold text-gray-800">3. Kertas Kerja & Pelaporan</h2>
+            <div class="bg-white p-8 rounded shadow-lg min-h-[500px] border border-gray-200" id="reportContent">
+                <h1 class="text-2xl font-bold text-center mb-4">LAPORAN AUDIT INTERNAL PIUTANG USAHA</h1>
+                <hr class="my-4">
+                <p class="text-gray-500 italic text-center">Laporan belum digenerate. Silakan lakukan analisis terlebih dahulu.</p>
+            </div>
+            <button onclick="printReport()" class="bg-gray-800 text-white px-4 py-2 rounded">🖨️ Export PDF</button>
+        </div>
+
+    </main>
+
+    <!-- Logic Script -->
+    <script type="module">
+        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+        let csvData = null;
+        let genAI = null;
+        let model = null;
+        let chat = null;
+
+        // Navigasi Sederhana
+        window.showSection = (id) => {
+            ['dashboard', 'upload', 'analysis', 'report'].forEach(sec => {
+                document.getElementById(sec).classList.add('hidden');
+            });
+            document.getElementById(id).classList.remove('hidden');
+        };
+
+        // Fungsi Baca CSV
+        document.getElementById('csvInput').addEventListener('change', function(e) {
+            const file = e.target.files;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                csvData = event.target.result;
+                document.getElementById('summary-status').innerText = "Data Terload ✅";
+                document.getElementById('summary-status').classList.add('text-green-600');
+                
+                // Tampilkan Preview Sedikit
+                const lines = csvData.split('\n').slice(0, 5).join('<br>');
+                const preview = document.getElementById('csvPreview');
+                preview.classList.remove('hidden');
+                preview.innerHTML = `<strong>Preview Data:</strong><br>${lines}`;
+                
+                alert("Data Piutang berhasil di-ingest. Silakan lanjut ke menu Analisis.");
+                initializeAI(); // Mulai sesi AI dengan data ini
+            };
+            reader.readAsText(file);
+        });
+
+        // Inisialisasi Gemini AI
+        async function initializeAI() {
+            const apiKey = document.getElementById('apiKey').value;
+            if (!apiKey) {
+                alert("Harap masukkan API Key Gemini di pojok kanan atas!");
+                return;
+            }
+
+            genAI = new GoogleGenerativeAI(apiKey);
+            model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+            const systemPrompt = `
+                Role: Anda adalah AI Senior Auditor bernama 'AuditGuard'.
+                Context: Anda sedang mengaudit akun Piutang Usaha (Accounts Receivable).
+                Data: Berikut adalah data CSV klien:\n${csvData}\n
+                
+                Tugas:
+                1. Analisis Aging Schedule (Lancar, 1-30, 31-60, 61-90, >90).
+                2. Cek Asersi Eksistensi (Konfirmasi) dan Valuasi (Cadangan Kerugian).
+                3. Deteksi anomali seperti 'Lapping' atau 'No Reply' konfirmasi.
+                4. Jawablah profesional, singkat, dan berbasis data.
+            `;
+
+            chat = model.startChat({
+                history: [
+                    {
+                        role: "user",
+                        parts: [{ text: systemPrompt }],
+                    },
+                    {
+                        role: "model",
+                        parts: [{ text: "Siap. Data piutang telah saya pelajari. Saya siap melakukan prosedur audit analitis." }],
+                    },
+                ],
+            });
+        }
+
+        // Kirim Pesan ke AI
+        window.sendToGemini = async () => {
+            const input = document.getElementById('userPrompt');
+            const history = document.getElementById('chatHistory');
+            const userText = input.value;
+            
+            if(!csvData) { alert("Upload CSV dulu!"); return; }
+            if(!chat) { await initializeAI(); }
+
+            // Tampilkan User Chat
+            history.innerHTML += `<div class="p-3 bg-gray-100 rounded-lg self-end text-right ml-auto max-w-2xl">${userText}</div>`;
+            input.value = "Sedang menganalisis...";
+            input.disabled = true;
+
+            try {
+                const result = await chat.sendMessage(userText);
+                const response = result.response.text();
+                
+                // Tampilkan AI Response (Support Markdown bold sederhana)
+                const formattedResponse = response.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+                history.innerHTML += `<div class="p-3 bg-blue-50 rounded-lg max-w-3xl border border-blue-100">🤖 <b>AuditGuard:</b><br>${formattedResponse}</div>`;
+                
+                // Auto scroll ke bawah
+                history.scrollTop = history.scrollHeight;
+
+                // Jika user minta laporan, update tab report
+                if(userText.toLowerCase().includes("laporan") || userText.toLowerCase().includes("report")) {
+                    document.getElementById('reportContent').innerHTML = `
+                        <h1 class="text-2xl font-bold text-center mb-4">LAPORAN AUDIT INTERNAL</h1>
+                        <div class="prose max-w-none">${formattedResponse}</div>
+                    `;
+                }
+
+            } catch (error) {
+                history.innerHTML += `<div class="p-3 bg-red-100 text-red-700 rounded-lg">Error: ${error.message}. Cek API Key Anda.</div>`;
+            }
+            
+            input.value = "";
+            input.disabled = false;
+            input.focus();
+        };
+
+        // Speech Recognition Sederhana (Web Speech API)
+        const micBtn = document.getElementById('micBtn');
+        if ('webkitSpeechRecognition' in window) {
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = 'id-ID';
+            recognition.continuous = false;
+
+            micBtn.onclick = () => {
+                recognition.start();
+                micBtn.innerText = "👂";
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results.transcript;
+                document.getElementById('userPrompt').value = transcript;
+                micBtn.innerText = "🎙️";
+                window.sendToGemini(); // Auto send
+            };
+        } else {
+            micBtn.style.display = 'none'; // Browser tidak support
+        }
+
+        window.printReport = () => {
+            const printContent = document.getElementById('reportContent').innerHTML;
+            const originalContent = document.body.innerHTML;
+            document.body.innerHTML = printContent;
+            window.print();
+            document.body.innerHTML = originalContent;
+            location.reload(); // Reload untuk restore event listener
+        }
+    </script>
+</body>
 </html>
